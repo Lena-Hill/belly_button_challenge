@@ -49,7 +49,7 @@ function createBubbleChart(sampleData) {
   console.log("Sample data for bubble chart:", sampleData); // Log sample data for bubble chart
 
   // Create trace for the bubble chart
-  const trace1 = {
+  let trace1 = {
     x: sampleData.otu_ids,
     y: sampleData.sample_values,
     text: sampleData.otu_labels,
@@ -62,7 +62,7 @@ function createBubbleChart(sampleData) {
   };
 
   // Define layout for the chart
-  const layout = {
+  let layout = {
     title: 'Bacteria Cultures per Sample',
     xaxis: { title: 'OTU ID' },
     yaxis: { title: 'Sample Values' },
@@ -73,6 +73,25 @@ function createBubbleChart(sampleData) {
 
   // Plot the chart using Plotly
   Plotly.newPlot('bubble', [trace1], layout);
+}
+
+// Function to display sample metadata
+function displayMetadata(metadata) {
+  // Select the element where the metadata will be displayed
+  const metadataPanel = d3.select("#sample-metadata");
+
+  // Clear any existing metadata
+  metadataPanel.html("");
+
+  // Iterate over each key-value pair in the metadata object and append to the panel
+  Object.entries(metadata).forEach(([key, value]) => {
+    metadataPanel.append("p").text(`${key}: ${value}`);
+  });
+
+  // Adjust the size and placement of the metadata panel
+  metadataPanel.style("width", "300px") // Adjust the width
+               .style("height", "200px") // Adjust the height
+               .style("overflow-y", "auto"); // Enable vertical scrolling
 }
 
 // Function to initialize the dashboard
@@ -92,29 +111,23 @@ async function init() {
     dropdownMenu.on("change", function() {
       const selectedSample = d3.select(this).property("value");
       const sampleData = data.samples.find(sample => sample.id === selectedSample);
+      const sampleMetadata = data.metadata.find(sample => sample.id === parseInt(selectedSample));
+      
+      // Update all plots and metadata
       createBarChart(sampleData);
+      createBubbleChart(sampleData);
+      displayMetadata(sampleMetadata);
     });
 
     // Initial sample ID
     const initialSample = data.names[0];
     const initialSampleData = data.samples.find(sample => sample.id === initialSample);
-
-    // Create initial chart
+    const initialSampleMetadata = data.metadata.find(sample => sample.id === parseInt(initialSample));
+    
+    // Create initial charts and display initial metadata
     createBarChart(initialSampleData);
-
-    // Event listener for bubble chart dropdown menu change
-    d3.select("#selDataset").on("change", function() {
-      let selectedSample = d3.select(this).property("value");
-      let sampleData = data.samples.find(sample => sample.id === selectedSample);
-      createBubbleChart(sampleData);
-    });
-
-    // Initial sample ID for bubble chart
-    let initialSampleBubble = data.names[0];
-    let initialSampleDataBubble = data.samples.find(sample => sample.id === initialSampleBubble);
-
-    // Create initial bubble chart
-    createBubbleChart(initialSampleDataBubble);
+    createBubbleChart(initialSampleData);
+    displayMetadata(initialSampleMetadata);
   } else {
     console.error("Data not available.");
   }
